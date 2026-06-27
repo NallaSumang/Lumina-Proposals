@@ -17,8 +17,6 @@ Lumina Proposals is a modern, full-stack enterprise SaaS application designed to
 
 By leveraging **Retrieval-Augmented Generation (RAG)**, Lumina ingests internal company knowledge bases (SOC2 reports, whitepapers, past proposals) and automatically drafts highly accurate, context-aware answers to incoming questionnaires.
 
-> **Note:** The current `main` branch contains the complete Frontend UI, Routing, and Architectural Blueprint. The Database and AI Generation endpoints are currently mocked to allow for rapid UI/UX iteration and testing.
-
 ---
 
 ## 🚀 Key Features
@@ -80,16 +78,6 @@ To run Lumina Proposals locally and test the Triage Queue UI:
 
 4. **Experience the app:**
    Open [http://localhost:3000](http://localhost:3000) in your browser. Click into any Active RFP on the dashboard to experience the immersive Triage Queue workflow.
-
----
-
-## 🤝 Handoff & Next Steps
-
-This repository is perfectly structured and waiting for final backend integration. The following steps are required for production readiness:
-
-1. **Authentication:** Implement a provider (e.g., NextAuth, Clerk, Supabase Auth) to secure the `/(app)` routes.
-2. **Database:** Replace the mock arrays in `lib/mock.ts` with a real database ORM (e.g., Prisma + PostgreSQL).
-3. **AI & Vector DB:** In `ai-rag/services/`, swap the in-memory `VectorStore` with Pinecone/ChromaDB, and replace the `mockGenerate` function with actual API calls to OpenAI or Anthropic.
 
 ---
 
