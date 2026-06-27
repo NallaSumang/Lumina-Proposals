@@ -1,24 +1,24 @@
 "use client";
 import { useState, useMemo } from "react";
-import { LayoutGrid, List, Search, Upload, Filter, FileText, ShieldCheck, BookOpen, Scale, Briefcase, FlaskConical } from "lucide-react";
-import { motion } from "framer-motion";
+import { LayoutGrid, List, Search, Upload, Filter } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { PageHeader } from "@/components/common/page-header";
-import { knowledgeDocs } from "@/lib/mock";
-import { formatDate, initials } from "@/lib/utils";
-import type { KnowledgeDoc } from "@/types";
-
-const typeIcon: Record<KnowledgeDoc["type"], React.ComponentType<{ className?: string }>> = {
-  security: ShieldCheck, policy: BookOpen, technical: FlaskConical, product: Briefcase, legal: Scale, case_study: FileText,
-};
+import { DocumentGrid } from "@/components/kb/document-grid";
+import { DocumentList } from "@/components/kb/document-list";
+import { useKnowledgeDocs, useUploadDocument } from "@/hooks/use-queries";
+import { toast } from "sonner";
+import { useRef } from "react";
 
 const tagFilters = ["All", "SOC2", "ISO27001", "HIPAA", "GDPR", "Security", "Policy", "Technical"];
 
 export default function KnowledgeBasePage() {
+  const { data: knowledgeDocs = [] } = useKnowledgeDocs();
+  const { mutate: uploadDocument, isPending } = useUploadDocument();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const [view, setView] = useState<"grid" | "list">("grid");
   const [query, setQuery] = useState("");
   const [tag, setTag] = useState("All");
@@ -28,14 +28,41 @@ export default function KnowledgeBasePage() {
     const matchesQ = !q || d.title.toLowerCase().includes(q) || d.tags.some((t) => t.toLowerCase().includes(q));
     const matchesT = tag === "All" || d.tags.includes(tag) || d.type === tag.toLowerCase();
     return matchesQ && matchesT;
-  }), [query, tag]);
+  }), [query, tag, knowledgeDocs]);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    toast.promise(
+      new Promise((resolve, reject) => {
+        uploadDocument(file, { onSuccess: resolve, onError: reject });
+      }),
+      {
+        loading: "Uploading and processing document...",
+        success: "Document indexed successfully",
+        error: "Failed to upload document",
+      }
+    );
+    
+    // reset input
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
 
   return (
     <div className="space-y-6">
       <PageHeader
         title="Knowledge Base"
         description="Your single source of truth — policies, security docs, past responses, and case studies."
-        actions={<Button><Upload className="h-4 w-4" /> Upload document</Button>}
+        actions={
+          <>
+            <input type="file" className="hidden" ref={fileInputRef} onChange={handleFileChange} />
+            <Button onClick={() => fileInputRef.current?.click()} disabled={isPending}>
+              <Upload className="h-4 w-4" /> 
+              {isPending ? "Uploading..." : "Upload document"}
+            </Button>
+          </>
+        }
       />
 
       <Card>
@@ -60,65 +87,9 @@ export default function KnowledgeBasePage() {
       </Card>
 
       {view === "grid" ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {filtered.map((d, i) => {
-            const Icon = typeIcon[d.type];
-            return (
-              <motion.div key={d.id} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}>
-                <Card className="group h-full cursor-pointer transition-all hover:-translate-y-0.5 hover:shadow-elevated">
-                  <CardContent className="space-y-3 p-5">
-                    <div className="flex items-start justify-between">
-                      <div className="grid h-10 w-10 place-items-center rounded-lg bg-primary/10 text-primary"><Icon className="h-5 w-5" /></div>
-                      <Badge variant={d.status === "indexed" ? "success" : d.status === "processing" ? "accent" : "danger"}>{d.status}</Badge>
-                    </div>
-                    <div>
-                      <h3 className="line-clamp-2 text-sm font-semibold leading-snug">{d.title}</h3>
-                      <p className="mt-1 text-xs text-muted-foreground">{d.version} · {d.size}</p>
-                    </div>
-                    <div className="flex flex-wrap gap-1.5">
-                      {d.tags.slice(0, 3).map((t) => <Badge key={t} variant="secondary" className="text-[10px]">{t}</Badge>)}
-                    </div>
-                    <div className="flex items-center gap-2 border-t pt-3">
-                      <Avatar className="h-6 w-6"><AvatarFallback className="text-[10px]">{initials(d.uploadedBy.name)}</AvatarFallback></Avatar>
-                      <span className="text-xs text-muted-foreground">{d.uploadedBy.name.split(" ")[0]} · {formatDate(d.uploadedAt)}</span>
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            );
-          })}
-        </div>
+        <DocumentGrid data={filtered} />
       ) : (
-        <Card>
-          <CardContent className="p-0">
-            <table className="w-full text-sm">
-              <thead className="bg-muted/40">
-                <tr>{["Document", "Type", "Tags", "Version", "Size", "Uploaded", "Status"].map((h) => (
-                  <th key={h} className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">{h}</th>
-                ))}</tr>
-              </thead>
-              <tbody>
-                {filtered.map((d) => {
-                  const Icon = typeIcon[d.type];
-                  return (
-                    <tr key={d.id} className="border-t hover:bg-muted/40">
-                      <td className="px-4 py-3"><div className="flex items-center gap-3">
-                        <div className="grid h-8 w-8 place-items-center rounded-md bg-primary/10 text-primary"><Icon className="h-4 w-4" /></div>
-                        <span className="font-medium">{d.title}</span>
-                      </div></td>
-                      <td className="px-4 py-3 capitalize text-muted-foreground">{d.type.replace("_", " ")}</td>
-                      <td className="px-4 py-3"><div className="flex flex-wrap gap-1">{d.tags.map((t) => <Badge key={t} variant="secondary" className="text-[10px]">{t}</Badge>)}</div></td>
-                      <td className="px-4 py-3 text-xs text-muted-foreground">{d.version}</td>
-                      <td className="px-4 py-3 text-xs text-muted-foreground">{d.size}</td>
-                      <td className="px-4 py-3 text-xs text-muted-foreground">{formatDate(d.uploadedAt)}</td>
-                      <td className="px-4 py-3"><Badge variant={d.status === "indexed" ? "success" : d.status === "processing" ? "accent" : "danger"}>{d.status}</Badge></td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </CardContent>
-        </Card>
+        <DocumentList data={filtered} />
       )}
     </div>
   );
