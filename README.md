@@ -1,86 +1,42 @@
 <div align="center">
-  <h1>✨ Lumina Proposals</h1>
-  <p><strong>Enterprise-Grade AI Automation for Requests for Proposals (RFPs) and Security Questionnaires</strong></p>
-
-  [![Next.js](https://img.shields.io/badge/Next.js-15.0-black?style=flat-square&logo=next.js)](https://nextjs.org/)
-  [![React](https://img.shields.io/badge/React-19.0-blue?style=flat-square&logo=react)](https://react.dev/)
-  [![TypeScript](https://img.shields.io/badge/TypeScript-Strict-blue?style=flat-square&logo=typescript)](https://www.typescriptlang.org/)
-  [![Tailwind CSS](https://img.shields.io/badge/Tailwind-CSS-38B2AC?style=flat-square&logo=tailwind-css)](https://tailwindcss.com/)
-  [![License](https://img.shields.io/badge/License-MIT-green.svg?style=flat-square)](LICENSE)
+  <h1>📄 Lumina-Proposals</h1>
+  <p>An enterprise-ready UI with a local-first RAG document extraction engine.</p>
 </div>
 
-<br />
+---
 
 ## 📖 Overview
 
-Lumina Proposals is a modern, full-stack enterprise SaaS application designed to drastically reduce the time engineering and sales teams spend answering 100+ page corporate RFPs. 
+**Lumina-Proposals** is designed to process and synthesize massive corporate RFPs. It combines an excellent structural RAG pipeline abstraction with a fast Next.js API layer to ingest, chunk, and embed large PDF documents for semantic retrieval.
 
-By leveraging **Retrieval-Augmented Generation (RAG)**, Lumina ingests internal company knowledge bases (SOC2 reports, whitepapers, past proposals) and automatically drafts highly accurate, context-aware answers to incoming questionnaires.
+## 🏗️ System Architecture
 
----
+The repository enforces strict separation of concerns within the RAG lifecycle:
 
-## 🚀 Key Features
+- **Frontend & API Routes:** Next.js (TypeScript) handling the file uploads and interface interactions.
+- **RAG Services (`ai-rag/services`):**
+  - `document-parser.ts`: Extracts text from PDFs.
+  - `chunker.ts`: Semantically chunks large strings.
+  - `embeddings.ts`: Interfaces with embedding models.
+  - `ingestion-pipeline.ts`: Orchestrates the sequential flow.
+- **Vector Store (`lib/vector-store.ts`):** Utilizes an extremely fast `InMemoryVectorStore` interface to keep vectors and text chunks directly in V8 memory without relying on external network requests.
 
-* **The "Triage Queue" Paradigm:** A Superhuman-inspired immersive interface for reviewing AI-generated answers. Reviewers are presented with one question at a time, side-by-side with the exact source documents the AI used. Answers can be edited, regenerated, or instantly approved with smooth `framer-motion` transitions.
-* **Knowledge Base Ingestion:** Dedicated workspaces to upload and index technical documents, policies, and case studies into the vector store.
-* **Luxury Design System:** Built with `shadcn/ui`, Tailwind CSS, and custom glassmorphic aesthetics to provide a premium enterprise feel.
-* **Real-time Analytics:** A comprehensive dashboard featuring dynamic charts (via `recharts`) tracking RFP progress, AI confidence distribution, and team activity.
+### ⚠️ Production Architecture Notes
 
----
+Currently, this repository is optimized for **local-first speed and development simplicity**:
+1. **Single-Threaded Ingestion:** The `ingestDocument` pipeline runs synchronously inline within the Next.js `POST` API route. Because Node.js utilizes a single-threaded event loop, processing massive 100+ page PDFs will temporarily block concurrent API requests. *For enterprise production deployments*, this pipeline should be refactored to emit a Job ID and offload the parsing/chunking to a Redis-backed queue (e.g., BullMQ) or an external background worker.
+2. **In-Memory Store:** The current implementation uses an array mapped in RAM. This provides zero-latency reads, but lacks disk persistence. *Before scaling to thousands of documents*, swap out the in-memory factory for a persistent vector database connection like Pinecone or Supabase pgvector to avoid Out-Of-Memory (OOM) leaks.
 
-## 🧠 System Architecture
+## 🚀 Getting Started
 
-The application is built as a monolithic Next.js app, tightly coupling the React frontend with Node.js backend API routes for rapid AI prototyping.
-
-```mermaid
-graph TD
-    A[Client UI] -->|React Query| B(Next.js API Routes)
-    B -->|/api/rfps/answer| C{Retrieval Pipeline}
-    C -->|Query| D[(Vector Store)]
-    D -->|Context Chunks| C
-    C -->|Draft + Context| A
-```
-
----
-
-## 🛠️ Tech Stack
-
-* **Framework:** Next.js 15 (App Router)
-* **Language:** TypeScript (Strict Mode)
-* **Styling:** Tailwind CSS + `shadcn/ui`
-* **Animations:** Framer Motion
-* **State & Data Fetching:** React Query (`@tanstack/react-query`) + Zustand
-* **Icons:** Lucide React
-* **Charts:** Recharts
-
----
-
-## 💻 Local Development
-
-To run Lumina Proposals locally and test the Triage Queue UI:
-
-1. **Clone the repository:**
+1. **Install Dependencies:**
    ```bash
-   git clone https://github.com/NallaSumang/Lumina-Proposals.git
-   cd Lumina-Proposals
+   npm install
    ```
-
-2. **Install dependencies:**
-   *(Note: use `--legacy-peer-deps` due to React 19 RC dependencies)*
-   ```bash
-   npm install --legacy-peer-deps
-   ```
-
-3. **Start the development server:**
+2. **Launch the Development Server:**
    ```bash
    npm run dev
    ```
 
-4. **Experience the app:**
-   Open [http://localhost:3000](http://localhost:3000) in your browser. Click into any Active RFP on the dashboard to experience the immersive Triage Queue workflow.
-
----
-
-<div align="center">
-  <i>Engineered with precision for modern sales teams.</i>
-</div>
+## 📜 License
+Distributed under the MIT License.

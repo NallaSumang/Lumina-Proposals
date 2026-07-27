@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Check, Edit2, ThumbsDown, Sparkles, FileText, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -29,11 +29,11 @@ export function TriageQueue({ questions, rfpId }: TriageQueueProps) {
   const isFinished = currentIndex >= questions.length;
 
   // Initialize draft answer when question changes
-  useState(() => {
+  useEffect(() => {
     if (activeQuestion) {
       setDraftAnswer(activeQuestion.answer || "");
     }
-  });
+  }, [activeQuestion]);
 
   if (isFinished) {
     return (
