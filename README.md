@@ -1,4 +1,4 @@
-<div align="center">
+﻿<div align="center">
   <h1>📄 Lumina-Proposals</h1>
   <p>A local-first RAG document extraction engine for corporate RFP automation.</p>
 </div>
@@ -18,19 +18,19 @@
 │ Next.js Frontend (Upload & UI)                          │
 └────────────────────────┬────────────────────────────────┘
                          │
-┌────────────────────────▼────────────────────────────────┐
+┌────────────────────────v────────────────────────────────┐
 │ RAG Service Layer (ai-rag/services/)                    │
 │                                                         │
-│  1. Document Parser ──▶ Extracts PDF/DOCX Text          │
+│  1. Document Parser ──> Extracts PDF/DOCX Text          │
 │          │                                              │
-│  2. Chunker         ──▶ Semantic Overlapping Chunks     │
+│  2. Chunker         ──> Semantic Overlapping Chunks     │
 │          │                                              │
-│  3. Embeddings      ──▶ Generates Vectors (Mock/OpenAI) │
+│  3. Embeddings      ──> Generates Vectors (Mock/OpenAI) │
 │          │                                              │
-│  4. Prompt Engine   ──▶ Formats Citations & Context     │
+│  4. Prompt Engine   ──> Formats Citations & Context     │
 └────────────────────────┬────────────────────────────────┘
                          │
-┌────────────────────────▼────────────────────────────────┐
+┌────────────────────────v────────────────────────────────┐
 │ InMemoryVectorStore (V8 Heap Storage)                   │
 └─────────────────────────────────────────────────────────┘
 ```
