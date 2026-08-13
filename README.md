@@ -13,6 +13,28 @@
 
 ## 🏗️ System Architecture
 
+```text
+┌─────────────────────────────────────────────────────────┐
+│ Next.js Frontend (Upload & UI)                          │
+└────────────────────────┬────────────────────────────────┘
+                         │
+┌────────────────────────▼────────────────────────────────┐
+│ RAG Service Layer (ai-rag/services/)                    │
+│                                                         │
+│  1. Document Parser ──▶ Extracts PDF/DOCX Text          │
+│          │                                              │
+│  2. Chunker         ──▶ Semantic Overlapping Chunks     │
+│          │                                              │
+│  3. Embeddings      ──▶ Generates Vectors (Mock/OpenAI) │
+│          │                                              │
+│  4. Prompt Engine   ──▶ Formats Citations & Context     │
+└────────────────────────┬────────────────────────────────┘
+                         │
+┌────────────────────────▼────────────────────────────────┐
+│ InMemoryVectorStore (V8 Heap Storage)                   │
+└─────────────────────────────────────────────────────────┘
+```
+
 The repository enforces strict separation of concerns within the RAG lifecycle:
 
 - **Frontend & API Routes:** Next.js 15 (TypeScript) handling file uploads, RFP management, analytics dashboards, and search interfaces.
